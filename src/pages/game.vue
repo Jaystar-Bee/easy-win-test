@@ -7,10 +7,13 @@ import resultModal from '@/components/common/result-modal.vue'
 import { ref, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { PRIZE_E, RESULT_TYPE_E } from '@/types/prize.enum'
+import { useResultStore } from '@/stores/result'
 // SOUNDS
 import jackpotStartSound from '/public/sounds/jackpot-start.mp3'
 import jackpotLoseSound from '/public/sounds/jackpot-lose.mp3'
 import jackpotWinSound from '/public/sounds/jackpot-coins.mp3'
+
+const resultStore = useResultStore()
 
 const list = [
   '/public/icons/ball.png',
@@ -93,6 +96,7 @@ function checkResult() {
     resultType.value = RESULT_TYPE_E.FAILED
     loseSound.play()
   }
+  resultStore.setResultType(resultType.value)
   showResultModal.value = true
 }
 
@@ -143,6 +147,7 @@ function handleTicketing() {
     selectedCards.value = data
     isNewCard.value = true
     startSound?.play()
+    resultStore.setResultType(resultType.value)
   }
 }
 function handleCompleteScratch() {
