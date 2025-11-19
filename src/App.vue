@@ -4,4 +4,8 @@
   <router-view></router-view>
 </template>
 
-<style scoped></style>
+<style>
+.background-contain {
+  background-size: 100% 100%;
+}
+</style>

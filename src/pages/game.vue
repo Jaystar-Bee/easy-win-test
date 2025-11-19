@@ -3,37 +3,126 @@ import singlePage from '@/layouts/single-page.vue'
 import actionSection from '@/components/game/action-section.vue'
 import scratchCard from '@/components/common/scratch-card.vue'
 import noteModal from '@/components/common/note-modal.vue'
-import { ref } from 'vue'
+import resultModal from '@/components/common/result-modal.vue'
+import { ref, watch } from 'vue'
 import { Icon } from '@iconify/vue'
+import { PRIZE_E, RESULT_TYPE_E } from '@/types/prize.enum'
+// SOUNDS
+import jackpotStartSound from '/public/sounds/jackpot-start.mp3'
+import jackpotLoseSound from '/public/sounds/jackpot-lose.mp3'
+import jackpotWinSound from '/public/sounds/jackpot-coins.mp3'
 
 const list = [
   '/public/icons/ball.png',
-  '/public/icons/cup.png',
-  '/public/icons/flag.png',
+  '/public/icons/whistle.png',
   '/public/icons/glove.png',
   '/public/icons/player.png',
-  '/public/icons/whistle.png',
+  '/public/icons/flag.png',
+  '/public/icons/cup.png',
 ]
+const AMOUNT = 500
 const selectedCards = ref<string[]>([])
+
+// SOUNDS
+const startSound = new Audio(jackpotStartSound)
+const loseSound = new Audio(jackpotLoseSound)
+const winSound = new Audio(jackpotWinSound)
+
 //SCRATCH
 const isNewCard = ref(false)
 const showNoteModal = ref(false)
 const shownGuide = ref(false)
 const resetScratch = ref(false)
 const forceReveal = ref(false)
+const showResultModal = ref(false)
+const resultCount = ref(0)
+const resultType = ref<RESULT_TYPE_E>()
+watch(forceReveal, () => {
+  if (forceReveal.value) {
+    checkResult()
+  }
+})
+watch(showResultModal, () => {
+  if (!showResultModal.value) {
+    setTimeout(() => {
+      resetResult()
+    }, 500)
+  }
+})
+
+function checkResult() {
+  if (resultCount.value !== 0) {
+    resultCount.value = 0
+  }
+  const has3Balls =
+    selectedCards.value.filter((item) => item === '/public/icons/ball.png').length >= 3
+  const has3Whistles =
+    selectedCards.value.filter((item) => item === '/public/icons/whistle.png').length >= 3
+  const has3Gloves =
+    selectedCards.value.filter((item) => item === '/public/icons/glove.png').length >= 3
+  const has3Players =
+    selectedCards.value.filter((item) => item === '/public/icons/player.png').length >= 3
+  const has3Flags =
+    selectedCards.value.filter((item) => item === '/public/icons/flag.png').length >= 3
+  const has3Cups =
+    selectedCards.value.filter((item) => item === '/public/icons/cup.png').length >= 3
+
+  if (has3Balls) {
+    handleMultipleAdd(PRIZE_E.BALLS)
+  }
+  if (has3Whistles) {
+    handleMultipleAdd(PRIZE_E.WHISTLES)
+  }
+  if (has3Gloves) {
+    handleMultipleAdd(PRIZE_E.GLOVES)
+  }
+  if (has3Players) {
+    handleMultipleAdd(PRIZE_E.PLAYERS)
+  }
+  if (has3Flags) {
+    handleMultipleAdd(PRIZE_E.FLAGS)
+  }
+  if (has3Cups) {
+    handleMultipleAdd(PRIZE_E.CUPS)
+  }
+
+  if (resultCount.value > 0) {
+    resultType.value = RESULT_TYPE_E.SUCCESS
+    winSound.play()
+  } else {
+    resultType.value = RESULT_TYPE_E.FAILED
+    loseSound.play()
+  }
+  showResultModal.value = true
+}
+
+function resetResult() {
+  resultCount.value = 0
+  resultType.value = undefined
+}
+
+function handleMultipleAdd(amount: number) {
+  if (resultCount.value !== 0) {
+    resultCount.value = resultCount.value + amount
+  } else {
+    resultCount.value = amount
+  }
+}
+
 function handleTicketing() {
   if (isNewCard.value && !forceReveal.value) {
     forceReveal.value = true
   } else {
-    selectedCards.value = []
-    while (selectedCards.value.length < 9) {
+    const data = []
+    while (data.length < 9) {
+      if (data?.length === 9) break
       const randomIndex = Math.floor(Math.random() * list.length)
       const randomItem = list[randomIndex]
 
-      const selectionCount = selectedCards.value.filter((item) => item === randomItem).length
+      const selectionCount = data?.filter((item) => item === randomItem).length
 
       if (selectionCount < 3) {
-        selectedCards.value.push(randomItem as string)
+        data.push(randomItem as string)
       }
     }
     if (forceReveal.value) {
@@ -51,7 +140,9 @@ function handleTicketing() {
         resetScratch.value = false
       }, 200)
     }
+    selectedCards.value = data
     isNewCard.value = true
+    startSound?.play()
   }
 }
 function handleCompleteScratch() {
@@ -69,14 +160,17 @@ function handleSetBarrage(barrage: string) {
   <single-page>
     <div class="h-full flex flex-col gap-4 justify-between flex-1 px-4">
       <div
-        class="relative bg-norepeat bg-cover h-full w-full max-w-[500px] aspect-[500/592] mx-auto mt-4 p-3"
+        class="relative bg-norepeat bg-cover h-full w-full max-w-[500px] aspect-[500/592] mx-auto mt-4 p-3 transition-all duration-300 ease-in-out"
+        :class="{
+          'scale-[0.7]': showResultModal,
+        }"
         style="background-image: url('/images/field-background.png')"
       >
         <div
           class="bg-black/20 rounded-full py-1 px-2 text-white flex items-center gap-1 w-fit text-xs"
         >
           <img src="/icons/icon_money.png" class="h-3" />
-          &#8358;{{ Number(500)?.toLocaleString() }}
+          &#8358;{{ Number(AMOUNT)?.toLocaleString() }}
         </div>
 
         <div
@@ -100,8 +194,8 @@ function handleSetBarrage(barrage: string) {
                 >
                   <ul class="grid grid-cols-3 grid-row-3 h-full w-full">
                     <li
-                      v-for="item in selectedCards"
-                      :key="item"
+                      v-for="(item, index) in selectedCards"
+                      :key="index"
                       class="flex items-center justify-center"
                     >
                       <img :src="item" class="w-4 sm:w-9" />
@@ -132,6 +226,11 @@ function handleSetBarrage(barrage: string) {
         <p class="text-sm pt-2">Slide finger to reveal Numbers</p>
       </div>
     </note-modal>
+    <result-modal
+      v-model="showResultModal"
+      :totalAmount="AMOUNT * resultCount"
+      :type="resultType"
+    />
   </single-page>
 </template>
 
