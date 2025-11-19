@@ -8,6 +8,8 @@ import { ref, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { PRIZE_E, RESULT_TYPE_E } from '@/types/prize.enum'
 import { useResultStore } from '@/stores/result'
+import { Vue3Marquee } from 'vue3-marquee'
+
 // SOUNDS
 import jackpotStartSound from '/public/sounds/jackpot-start.mp3'
 import jackpotLoseSound from '/public/sounds/jackpot-lose.mp3'
@@ -163,7 +165,18 @@ function handleSetBarrage(barrage: string) {
 </script>
 <template>
   <single-page>
-    <div class="h-full flex flex-col gap-4 justify-between flex-1 px-4">
+    <div class="h-full flex flex-col gap-4 justify-between flex-1 px-4 relative">
+      <div v-if="barrages?.length" class="absolute top-20 left-0 w-full">
+        <Vue3Marquee :loop="1" @onComplete="barrages = []">
+          <div
+            v-for="(item, index) in barrages"
+            :key="index"
+            class="bg-white rounded-full px-2.5 py-1 text-[10px]"
+          >
+            {{ item }}
+          </div>
+        </Vue3Marquee>
+      </div>
       <div
         class="relative bg-norepeat bg-cover h-full w-full max-w-[500px] aspect-[500/592] mx-auto mt-4 p-3 transition-all duration-300 ease-in-out"
         :class="{
