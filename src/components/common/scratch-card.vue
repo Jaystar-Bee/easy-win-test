@@ -133,8 +133,8 @@ const getEventCoords = (e: MouseEvent | TouchEvent): Point => {
   let clientX: number, clientY: number
 
   if ('touches' in e && e.touches.length > 0) {
-    clientX = e.touches[0].clientX
-    clientY = e.touches[0].clientY
+    clientX = e?.touches[0]?.clientX as number
+    clientY = e?.touches[0]?.clientY as number
   } else if ('clientX' in e) {
     clientX = e.clientX
     clientY = e.clientY
@@ -196,7 +196,7 @@ const calculateScratchPercentage = () => {
     let transparentPixels = 0
 
     for (let i = 3; i < pixelData.length; i += 4) {
-      if (pixelData[i] < 50) {
+      if ((pixelData[i] as number) < 50) {
         transparentPixels++
       }
     }

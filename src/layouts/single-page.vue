@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ROUTES_E } from '@/types/routes-enums'
-import container from '../components/common/container.vue'
-import theHeader from '../components/common/header.vue'
+import container from '../components/common/the-container.vue'
+import theHeader from '../components/common/the-header.vue'
 import { Icon } from '@iconify/vue'
 import { withDefaults, defineProps, computed } from 'vue'
 import { useResultStore } from '@/stores/result'

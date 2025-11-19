@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick } from 'vue'
-import container from '../common/container.vue'
+import container from '../common/the-container.vue'
 import { Icon } from '@iconify/vue'
 import noteModal from '../common/note-modal.vue'
 
